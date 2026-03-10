@@ -1,81 +1,134 @@
 :root {
     --bg: #0f172a;
     --card: #1e293b;
-    --accent: #38bdf8;
+    --primary: #38bdf8;
+    --secondary: #10b981;
+    --accent: #ef4444;
     --text: #f8fafc;
-    --danger: #ef4444;
 }
 
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
+body { 
+    background: var(--bg); 
+    color: var(--text); 
+    font-family: 'Poppins', sans-serif; 
+    margin: 0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh;
+}
+
+.game-wrapper {
     display: flex;
+    gap: 20px;
+    width: 95%;
+    max-width: 1000px;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    padding: 20px;
 }
 
-.screen {
-    width: 90%;
-    max-width: 500px;
+.main-card {
+    background: var(--card);
+    padding: 40px;
+    border-radius: 24px;
+    flex: 2;
+    min-width: 320px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
     text-align: center;
 }
 
-.card {
-    background: var(--card);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+/* Sidebar dizajn */
+.sidebar {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 24px;
+    width: 280px;
+    display: none; /* Pali se preko JS-a */
+    flex-direction: column;
+    border: 1px solid rgba(255,255,255,0.1);
+    min-height: 400px;
 }
 
-.question-display {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 1.5rem 0;
-    color: var(--accent);
+h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
+
+/* Igrači u krugovima (Pills) */
+.player-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+    justify-content: flex-start;
 }
 
-input {
+.player-circle {
+    background: #334155;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.me-tag {
+    background: var(--primary);
+    color: var(--bg);
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+/* Forme */
+input, select {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     margin: 10px 0;
-    border-radius: 8px;
-    border: 1px solid #334155;
+    border-radius: 12px;
+    border: 2px solid #334155;
     background: #0f172a;
     color: white;
+    font-family: inherit;
     box-sizing: border-box;
 }
 
-.btn-main {
+button {
     width: 100%;
-    padding: 15px;
-    background: var(--accent);
+    padding: 14px;
+    margin-top: 15px;
+    border-radius: 12px;
     border: none;
-    border-radius: 8px;
-    color: var(--bg);
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
     transition: 0.3s;
+    font-family: inherit;
+    text-transform: uppercase;
 }
 
-.btn-main:hover { opacity: 0.8; transform: translateY(-2px); }
+.btn-blue { background: var(--primary); color: var(--bg); }
+.btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3); }
 
-.answers-grid {
-    display: grid;
-    gap: 15px;
-    margin-top: 20px;
+/* Napusti lobi na dnu */
+.btn-leave { 
+    background: rgba(239, 68, 68, 0.1); 
+    color: var(--accent); 
+    border: 1px solid var(--accent); 
+    margin-top: auto; 
+    font-size: 0.8rem;
 }
+.btn-leave:hover { background: var(--accent); color: white; }
 
-.answer-card {
-    background: var(--card);
-    padding: 15px;
-    border-radius: 10px;
-    cursor: pointer;
-    border: 2px solid transparent;
+#setup-area, #lobby-area, #game-area { display: none; }
+.active { display: block !important; }
+.active-flex { display: flex !important; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
-.answer-card:hover { border-color: var(--accent); }
-
-.hidden { display: none; }
