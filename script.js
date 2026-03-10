@@ -158,8 +158,9 @@ async function switchToGame() {
 
     document.getElementById('question-box').innerText = data.pitanje;
     const roleEl = document.getElementById('role-display');
-    roleEl.innerText = data.is_impostor ? "TI SI NEVIN. 😇" : "TI SI NEVIN. 😇";
-    roleEl.style.color = data.is_impostor ? "#10b981" : "#10b981";
+    // Sve puta piši "TI SI NEVIN" - nitko ne zna tko je uljez!
+    roleEl.innerText = "TI SI NEVIN. 😇";
+    roleEl.style.color = "#10b981";
 }
 
 async function sendAnswer() {
@@ -270,15 +271,22 @@ function showWinner(data) {
     // Izdvoji imena uljeza (mogu biti odvojena zarezima)
     const impostorsList = (data.impostors || '').split(',').map(u => u.trim()).filter(u => u);
     const impostersText = impostorsList.length > 1 ? impostorsList.join(', ') : impostorsList[0];
+    
+    // Provjeri da li je korisnik uljez
+    const amIImpostor = impostorsList.includes(currentUser);
+    
+    // Logika: Ako si uljez, pobjeđuješ kada je winner === 'impostor'
+    // Ako nisi uljez, pobjeđuješ kada je winner === 'detectives'
+    const iWon = (amIImpostor && data.winner === 'impostor') || 
+                 (!amIImpostor && data.winner === 'detectives');
 
-    // Provjera ko je pobijedio na osnovu podataka sa backenda
-    if (data.winner === 'detectives') {
+    if (iWon) {
         title.innerText = "POBJEDA! 🎉";
         title.style.color = "#10b981";
-        reveal.innerHTML = `<h3>Uhvatili ste uljeza!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
+        reveal.innerHTML = `<h3>Pobijedio si!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
     } else {
         title.innerText = "PORAZ! 💀";
         title.style.color = "#ef4444";
-        reveal.innerHTML = `<h3>Uljez vas je prevario!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
+        reveal.innerHTML = `<h3>Gubitak!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
     }
 }
