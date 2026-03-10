@@ -71,7 +71,8 @@ h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
     align-items: center;
     gap: 8px;
     border: 1px solid rgba(255,255,255,0.1);
-    animation: fadeIn 0.4s ease-out forwards;
+    /* UKLONI OVAJ RED ISPOD: */
+    /* animation: fadeIn 0.4s ease-out forwards; */
 }
 
 /* NOVO: Stil za spremne igrace */
