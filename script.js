@@ -267,14 +267,18 @@ function showWinner(data) {
     const title = document.getElementById('winner-title');
     const reveal = document.getElementById('reveal-box');
 
+    // Izdvoji imena uljeza (mogu biti odvojena zarezima)
+    const impostorsList = (data.impostors || '').split(',').map(u => u.trim()).filter(u => u);
+    const impostersText = impostorsList.length > 1 ? impostorsList.join(', ') : impostorsList[0];
+
     // Provjera ko je pobijedio na osnovu podataka sa backenda
     if (data.winner === 'detectives') {
         title.innerText = "POBJEDA! 🎉";
         title.style.color = "#10b981";
-        reveal.innerHTML = `<h3>Uhvatili ste uljeza!</h3><p>Uljez je bio: <b>${data.impostor}</b></p>`;
+        reveal.innerHTML = `<h3>Uhvatili ste uljeza!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
     } else {
         title.innerText = "PORAZ! 💀";
         title.style.color = "#ef4444";
-        reveal.innerHTML = `<h3>Uljez vas je prevario!</h3><p>Uljez je bio: <b>${data.impostor}</b></p>`;
+        reveal.innerHTML = `<h3>Uljez vas je prevario!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
     }
 }
