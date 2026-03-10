@@ -39,14 +39,13 @@ body {
     text-align: center;
 }
 
-/* Sidebar dizajn */
 .sidebar {
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 24px;
     width: 280px;
-    display: none; /* Pali se preko JS-a */
+    display: none; 
     flex-direction: column;
     border: 1px solid rgba(255,255,255,0.1);
     min-height: 400px;
@@ -54,7 +53,6 @@ body {
 
 h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
 
-/* Igrači u krugovima (Pills) */
 .player-grid {
     display: flex;
     flex-wrap: wrap;
@@ -76,6 +74,17 @@ h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
     animation: fadeIn 0.4s ease-out forwards;
 }
 
+/* NOVO: Stil za spremne igrace */
+.player-circle.ready {
+    border-color: var(--secondary);
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--secondary);
+}
+.player-circle.ready::after {
+    content: '✓';
+    font-size: 0.8rem;
+}
+
 .me-tag {
     background: var(--primary);
     color: var(--bg);
@@ -85,7 +94,6 @@ h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
     text-transform: uppercase;
 }
 
-/* Forme */
 input, select {
     width: 100%;
     padding: 14px;
@@ -113,8 +121,20 @@ button {
 
 .btn-blue { background: var(--primary); color: var(--bg); }
 .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3); }
+.btn-blue:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* Napusti lobi na dnu */
+/* NOVO: Dugme Spreman */
+.btn-ready {
+    background: #334155;
+    color: white;
+    border: 2px solid var(--secondary);
+}
+.btn-ready:hover { background: rgba(16, 185, 129, 0.2); }
+.btn-ready.is-ready {
+    background: var(--secondary);
+    color: var(--bg);
+}
+
 .btn-leave { 
     background: rgba(239, 68, 68, 0.1); 
     color: var(--accent); 
@@ -133,9 +153,8 @@ button {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Stil za dugme za brisanje sobe */
 .btn-delete {
-    background: var(--accent) !important; /* Crvena pozadina */
+    background: var(--accent) !important;
     border-color: #b91c1c !important;
     color: white !important;
 }
