@@ -3,10 +3,11 @@ let currentUser = "";
 let currentRoom = "";
 let lobbyPoll;
 let resultsPoll;
+let chatPoll; // NOVO
 let hasVoted = false;
-let gameRoomPlayers = []; // Sada cuva objekte: {name: "Ime", ready: 0/1}
+let gameRoomPlayers = []; 
 let isCreator = false;
-let myReadyStatus = false; // Pratimo lokalno stanje
+let myReadyStatus = false;
 
 function showError(msg) {
     const errDiv = document.getElementById('error-area');
@@ -24,12 +25,70 @@ function enterUI() {
     document.getElementById('lobby-area').classList.add('active');
     
     const sidebar = document.getElementById('sidebar');
+    const chatSidebar = document.getElementById('chat-sidebar');
+    
     if (sidebar) sidebar.classList.add('active-flex');
+    if (chatSidebar) chatSidebar.classList.add('active-flex'); // Prikaži chat
     
     document.getElementById('room-title').innerText = "Soba: " + currentRoom;
     
     startLobbyPolling();
+    startChatPolling(); // Pokreni chat
 }
+
+// --- CHAT FUNKCIJE ---
+
+function startChatPolling() {
+    if (chatPoll) clearInterval(chatPoll);
+    fetchChat(); // Odmah učitaj
+    chatPoll = setInterval(fetchChat, 2000);
+}
+
+async function fetchChat() {
+    try {
+        const res = await fetch(`${API}/get_msgs/${currentRoom}`);
+        const msgs = await res.json();
+        const box = document.getElementById('chat-box');
+        
+        // Da ne bi skakalo na svaki refresh, proveravamo da li je korisnik na dnu pre update-a
+        const isScrolledToBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 1;
+        
+        box.innerHTML = msgs.map(m => `
+            <div class="chat-msg">
+                <b>${m.u}:</b> ${m.t}
+            </div>
+        `).join('');
+
+        // Ako je bio na dnu, ostavi ga na dnu
+        if (isScrolledToBottom) {
+            box.scrollTop = box.scrollHeight;
+        }
+    } catch (e) { console.error("Chat error", e); }
+}
+
+async function sendChatMessage() {
+    const inp = document.getElementById('chat-input');
+    const txt = inp.value.trim();
+    if (!txt) return;
+
+    inp.value = "";
+    
+    await fetch(`${API}/send_msg`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: currentRoom, user: currentUser, text: txt })
+    });
+    
+    fetchChat(); // Odmah prikaži
+}
+
+function handleChatEnter(event) {
+    if (event.key === "Enter") {
+        sendChatMessage();
+    }
+}
+
+// --- GLAVNE FUNKCIJE ---
 
 async function createRoom() {
     currentUser = document.getElementById('nick').value.trim();
@@ -49,7 +108,7 @@ async function createRoom() {
 
         if (data.error) showError(data.error);
         else {
-            myReadyStatus = true; // Kreator je auto-spreman
+            myReadyStatus = true;
             enterUI();
         }
     } catch (e) { showError("Greška pri konekciji sa serverom."); }
@@ -71,7 +130,7 @@ async function joinRoom() {
 
         if (data.error) showError(data.error);
         else {
-            myReadyStatus = false; // Novi igrac nije spreman
+            myReadyStatus = false;
             enterUI();
         }
     } catch (e) { showError("Soba verovatno ne postoji."); }
@@ -95,24 +154,19 @@ async function fetchLobbyStatus() {
 
         gameRoomPlayers = data.players; 
 
-        // --- Renderovanje igrača (OPTIMIZOVANO) ---
         const grid = document.getElementById('player-grid');
         if (grid) {
-            // Pravimo HTML string
             const newHtml = gameRoomPlayers.map(p => `
                 <div class="player-circle ${p.ready ? 'ready' : ''}" data-player="${p.name}">
                     ${p.name} ${p.name === currentUser ? '<span class="me-tag">Ti</span>' : ''}
                 </div>
             `).join('');
 
-            // Ažuriramo DOM SAMO ako se sadržaj promenio (sprječava "skakutanje")
-            // Koristimo replace da ignorisemo razmake pri poređenju
             if (grid.innerHTML.replace(/\s/g, '') !== newHtml.replace(/\s/g, '')) {
                 grid.innerHTML = newHtml;
             }
         }
 
-        // Ažuriranje mog statusa
         const meObj = gameRoomPlayers.find(p => p.name === currentUser);
         if (meObj) {
             myReadyStatus = meObj.ready === 1;
@@ -124,7 +178,6 @@ async function fetchLobbyStatus() {
             switchToGame();
         }
 
-        // --- Logika za dugmad ---
         const startBtn = document.getElementById('start-btn');
         const leaveBtn = document.querySelector('.btn-leave');
         const readyBtn = document.getElementById('ready-btn');
@@ -176,7 +229,6 @@ function updateReadyButton() {
     }
 }
 
-// NOVA FUNKCIJA
 async function toggleReady() {
     try {
         const res = await fetch(`${API}/toggle_ready`, {
@@ -188,7 +240,6 @@ async function toggleReady() {
         if (data.status === 'updated') {
             myReadyStatus = data.ready === 1;
             updateReadyButton();
-            // Odmah osvezi lobby da vide drugi
             fetchLobbyStatus(); 
         }
     } catch (e) { console.error("Ready toggle error", e); }
@@ -213,7 +264,6 @@ async function leaveRoom() {
 }
 
 async function startGame() {
-    // Finalna provera na frontendu (mada backend takodje proverava)
     const allReady = gameRoomPlayers.every(p => p.ready === 1);
     if (!allReady) {
         showError("Svi igrači moraju biti spremni!");
@@ -227,7 +277,7 @@ async function startGame() {
     });
     const data = await res.json();
     if (data.error) {
-        showError(data.error); // Prikazi backend gresku (npr. "2 igraca nisu spremni")
+        showError(data.error);
     }
 }
 
@@ -235,10 +285,8 @@ async function switchToGame() {
     document.getElementById('lobby-area').classList.remove('active');
     document.getElementById('game-area').classList.add('active');
 
-    // *** ISPRAVKA: Ne sakrivamo više sidebar, ostaje vidljiv ***
-    // const sidebar = document.getElementById('sidebar');
-    // if (sidebar) sidebar.classList.remove('active-flex'); <--- OBRISATI OVE DVE LINIJE
-
+    // Ne sakrivaj sidebar-e
+    
     const res = await fetch(`${API}/get_q`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -288,7 +336,6 @@ async function fetchResults() {
         }
 
         if (data.status === 'voting' && !hasVoted) {
-            // Prosledi samo imena igraca
             const playerNames = gameRoomPlayers.map(p => p.name);
             startVotingUI(playerNames);
         }
@@ -341,11 +388,6 @@ function showWinner(data) {
     document.getElementById('voting-area').style.display = 'none';
     document.getElementById('winner-area').style.display = 'block';
     
-    // Osiguraj da je sidebar tu i dalje
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.add('active-flex');
-    
-    // ... ostatak koda ostaje isti ...
     const title = document.getElementById('winner-title');
     const reveal = document.getElementById('reveal-box');
 
@@ -398,14 +440,11 @@ async function playAgain() {
         
         document.getElementById('lobby-area').classList.add('active');
         
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) sidebar.classList.add('active-flex');
-        
-        // Resetujemo ready status u UI kada se vrati u lobby
-        myReadyStatus = false; 
+        myReadyStatus = true; // Admin je auto-spreman
         updateReadyButton();
 
         startLobbyPolling();
+        // Chat ostaje aktivan, samo osvezimo (fetchChat radi vec u pozadini)
 
     } catch (e) {
         console.error("Greška pri restartu igre:", e);
