@@ -4,6 +4,7 @@ let currentRoom = "";
 let lobbyPoll;
 let resultsPoll;
 let hasVoted = false;
+let gameRoomPlayers = []; // Čuvamo listu igrača
 
 // --- POMOĆNE I UI FUNKCIJE ---
 
@@ -95,11 +96,14 @@ async function fetchLobbyStatus() {
             return;
         }
 
+        // Čuvamo listu igrača globalno
+        gameRoomPlayers = data.players;
+
         // --- NOVO: Renderovanje igrača u krugovima (Pill chips) ---
         const grid = document.getElementById('player-grid');
         if (grid) {
             grid.innerHTML = data.players.map(p => `
-                <div class="player-circle">
+                <div class="player-circle" data-player="${p}">
                     ${p} ${p === currentUser ? '<span class="me-tag">Ti</span>' : ''}
                 </div>
             `).join('');
@@ -179,57 +183,69 @@ async function sendAnswer() {
 }
 
 async function fetchResults() {
-    const res = await fetch(`${API}/results/${currentRoom}`);
-    const data = await res.json();
-    const feed = document.getElementById('answers-feed');
-    
-    // Lepše formatiran ispis odgovora
-    feed.innerHTML = data.map(a => `
-        <div style="margin-bottom:10px; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px; border-left: 3px solid var(--primary);">
-            <b style="color:var(--primary)">${a.u}:</b> ${a.t}
-        </div>
-    `).join('');
+    try {
+        const res = await fetch(`${API}/results/${currentRoom}`);
+        const data = await res.json();
+        
+        // POPRAVKA: Odgovori su sada u data.answers, a ne u samom data
+        const answersList = data.answers || [];
+        
+        const feed = document.getElementById('answers-feed');
+        if (feed) {
+            feed.innerHTML = answersList.map(a => `
+                <p style="margin: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
+                    <b style="color: var(--primary)">${a.u}:</b> ${a.t}
+                </p>
+            `).join('');
+        }
+
+        // Provjera da li prelazimo na glasanje
+        if (data.status === 'voting' && !hasVoted) {
+            startVotingUI(gameRoomPlayers);
+        }
+
+        // Provjera da li je igra gotova
+        if (data.status === 'finished') {
+            showWinner(data);
+            if (resultsPoll) clearInterval(resultsPoll);
+        }
+    } catch (e) {
+        console.error("Greška pri dobavljanju rezultata:", e);
+    }
 }
 
 // --- FUNKCIJE ZA GLASANJE ---
 
 function startVotingUI(players) {
-    document.getElementById('game-area').classList.remove('active');
+    // Sakrij polje za kucanje odgovora, prikaži glasanje
+    document.getElementById('game-area').style.display = 'none';
     document.getElementById('voting-area').style.display = 'block';
 
     const votingGrid = document.getElementById('voting-grid');
-    // Generišemo dugmiće za sve igrače OSIM tebe
-    votingGrid.innerHTML = players
-        .filter(p => p !== currentUser)
+    
+    // Koristi proslijeđenu listu igrača (iz globalnog niza)
+    const validPlayers = players && Array.isArray(players) ? players : [];
+
+    votingGrid.innerHTML = validPlayers
+        .filter(p => p !== currentUser) // Ne možeš glasati za sebe
         .map(p => `
-            <button class="player-circle" onclick="submitVote('${p}')" style="cursor:pointer; width:auto; border: 2px solid var(--primary);">
-                📌 Glasaj za: ${p}
+            <button onclick="submitVote('${p}')" style="cursor:pointer; padding: 15px; margin: 5px; border: 2px solid var(--primary); background: rgba(56, 189, 248, 0.1); border-radius: 10px; color: white; font-weight: bold;">
+                🕵️ Sumnjam na: <b>${p}</b>
             </button>
         `).join('');
 }
 
 async function submitVote(votedFor) {
     if (hasVoted) return;
-    
-    // Vizuelna povratna informacija
-    if (!confirm(`Da li si siguran da je ${votedFor} uljez?`)) return;
+    hasVoted = true;
 
-    try {
-        const res = await fetch(`${API}/vote`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room: currentRoom, voter: currentUser, voted_for: votedFor })
-        });
-        
-        hasVoted = true;
-        document.getElementById('voting-grid').innerHTML = "<h3>Glasanje zabilježeno. Čekamo ostale...</h3>";
-        
-        // Počinjemo provjeravati da li su svi glasali da proglasimo pobjednika
-        setInterval(checkWinner, 3000);
-        
-    } catch (e) {
-        alert("Greška pri slanju glasa.");
-    }
+    await fetch(`${API}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: currentRoom, voter: currentUser, voted_for: votedFor })
+    });
+
+    document.getElementById('voting-area').innerHTML = "<h3>Glasanje uspešno! Čekamo ostale... 🕒</h3>";
 }
 
 async function checkWinner() {
