@@ -93,19 +93,26 @@ async function fetchLobbyStatus() {
             return;
         }
 
-        gameRoomPlayers = data.players; // Niz objekata: [{name: "Pera", ready: 1}, ...]
+        gameRoomPlayers = data.players; 
 
-        // --- Renderovanje igrača ---
+        // --- Renderovanje igrača (OPTIMIZOVANO) ---
         const grid = document.getElementById('player-grid');
         if (grid) {
-            grid.innerHTML = gameRoomPlayers.map(p => `
+            // Pravimo HTML string
+            const newHtml = gameRoomPlayers.map(p => `
                 <div class="player-circle ${p.ready ? 'ready' : ''}" data-player="${p.name}">
                     ${p.name} ${p.name === currentUser ? '<span class="me-tag">Ti</span>' : ''}
                 </div>
             `).join('');
+
+            // Ažuriramo DOM SAMO ako se sadržaj promenio (sprječava "skakutanje")
+            // Koristimo replace da ignorisemo razmake pri poređenju
+            if (grid.innerHTML.replace(/\s/g, '') !== newHtml.replace(/\s/g, '')) {
+                grid.innerHTML = newHtml;
+            }
         }
 
-        // Ažuriranje mog statusa (ako je promenio neko drugi ili greškom)
+        // Ažuriranje mog statusa
         const meObj = gameRoomPlayers.find(p => p.name === currentUser);
         if (meObj) {
             myReadyStatus = meObj.ready === 1;
@@ -117,7 +124,7 @@ async function fetchLobbyStatus() {
             switchToGame();
         }
 
-        // --- Logika za Start dugme ---
+        // --- Logika za dugmad ---
         const startBtn = document.getElementById('start-btn');
         const leaveBtn = document.querySelector('.btn-leave');
         const readyBtn = document.getElementById('ready-btn');
@@ -125,28 +132,21 @@ async function fetchLobbyStatus() {
         if (data.creator === currentUser) {
             isCreator = true;
             
-            // Proveri da li su svi spremni
             const allReady = gameRoomPlayers.every(p => p.ready === 1);
             
             if (startBtn) {
                 startBtn.style.display = 'block';
-                startBtn.disabled = !allReady; // Onemoguci ako nisu svi spremni
-                
-                if (!allReady && gameRoomPlayers.length > 0) {
-                    startBtn.style.opacity = "0.5";
-                    startBtn.style.cursor = "not-allowed";
-                } else {
-                    startBtn.style.opacity = "1";
-                    startBtn.style.cursor = "pointer";
-                }
+                startBtn.disabled = !allReady; 
+                startBtn.style.opacity = allReady ? "1" : "0.5";
+                startBtn.style.cursor = allReady ? "pointer" : "not-allowed";
             }
             
             if (leaveBtn) {
                 leaveBtn.innerText = "🗑️ OBRIŠI SOBU";
                 leaveBtn.classList.add('btn-delete');
             }
-            // Sakrij ready dugme za kreatora (on je uvek spreman, ili mu nije potrebno)
-            if (readyBtn) readyBtn.style.display = 'none';
+
+            if (readyBtn) readyBtn.style.display = 'block';
             
         } else {
             isCreator = false;
@@ -157,7 +157,7 @@ async function fetchLobbyStatus() {
                 leaveBtn.innerText = "🚪 NAPUSTI LOBI";
                 leaveBtn.classList.remove('btn-delete');
             }
-            // Prikazi ready dugme za ostale
+            
             if (readyBtn) readyBtn.style.display = 'block';
         }
     } catch (e) { console.error("Lobby poll error", e); }
@@ -234,10 +234,10 @@ async function startGame() {
 async function switchToGame() {
     document.getElementById('lobby-area').classList.remove('active');
     document.getElementById('game-area').classList.add('active');
-    
-    // Sakrij sidebar ili ga ostavi, po zelji. Ovde ga sklanjamo za vise prostora
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.remove('active-flex');
+
+    // *** ISPRAVKA: Ne sakrivamo više sidebar, ostaje vidljiv ***
+    // const sidebar = document.getElementById('sidebar');
+    // if (sidebar) sidebar.classList.remove('active-flex'); <--- OBRISATI OVE DVE LINIJE
 
     const res = await fetch(`${API}/get_q`, {
         method: 'POST',
@@ -341,6 +341,11 @@ function showWinner(data) {
     document.getElementById('voting-area').style.display = 'none';
     document.getElementById('winner-area').style.display = 'block';
     
+    // Osiguraj da je sidebar tu i dalje
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.add('active-flex');
+    
+    // ... ostatak koda ostaje isti ...
     const title = document.getElementById('winner-title');
     const reveal = document.getElementById('reveal-box');
 
