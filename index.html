@@ -10,6 +10,17 @@
 <body>
 
     <div class="game-wrapper">
+        
+        <!-- NOVI CHAT SIDEBAR (LEVO) -->
+        <div id="chat-sidebar" class="chat-sidebar">
+            <h3>💬 DISKUSIJA</h3>
+            <div id="chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Piši poruku..." onkeypress="handleChatEnter(event)">
+                <button onclick="sendChatMessage()">➤</button>
+            </div>
+        </div>
+
         <div class="main-card">
             
             <div id="setup-area" class="active">
@@ -75,7 +86,6 @@
             <div id="player-grid" class="player-grid">
                 </div>
             
-            <!-- NOVO DUGME SPREMAN -->
             <button id="ready-btn" class="btn-ready" onclick="toggleReady()">SPREMAN</button>
             
             <button class="btn-leave" onclick="leaveRoom()">🚪 NAPUSTI LOBI</button>
