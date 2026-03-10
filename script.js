@@ -5,7 +5,7 @@ let lobbyPoll;
 let resultsPoll;
 let hasVoted = false;
 let gameRoomPlayers = []; // Čuvamo listu igrača
-let isCreator = false; // <--- DODAJ OVO
+let isCreator = false;
 
 // --- POMOĆNE I UI FUNKCIJE ---
 
@@ -114,28 +114,20 @@ async function fetchLobbyStatus() {
             switchToGame();
         }
 
-        // --- NOVA LOGIKA ZA DUGME (START I DELETE) ---
+        // --- LOGIKA ZA DUGME (START I DELETE) ---
         const startBtn = document.getElementById('start-btn');
-        const leaveBtn = document.querySelector('.btn-leave'); // Selektujemo dugme za napuštanje
+        const leaveBtn = document.querySelector('.btn-leave');
 
         if (data.creator === currentUser) {
-            isCreator = true; // Postavljamo flag
-            
-            // Prikaži dugme za start
+            isCreator = true;
             if (startBtn) startBtn.style.display = 'block';
-            
-            // Promeni dugme za napuštanje u "Obriši sobu"
             if (leaveBtn) {
                 leaveBtn.innerText = "🗑️ OBRIŠI SOBU";
-                leaveBtn.classList.add('btn-delete'); // Dodajemo crvenu klasu
+                leaveBtn.classList.add('btn-delete');
             }
         } else {
             isCreator = false;
-            
-            // Sakrij start dugme za obične igrače
             if (startBtn) startBtn.style.display = 'none';
-            
-            // Vrati običan tekst za napuštanje
             if (leaveBtn) {
                 leaveBtn.innerText = "🚪 NAPUSTI LOBI";
                 leaveBtn.classList.remove('btn-delete');
@@ -145,10 +137,9 @@ async function fetchLobbyStatus() {
 }
 
 async function leaveRoom() {
-    // Ako je kreator, prikaži upozorenje da će soba biti obrisana
     if (isCreator) {
         if (!confirm("⚠️ Da li ste sigurni? Brisanje sobe će izbaciti sve igrače!")) {
-            return; // Ako pritisne "Cancel", ne radi ništa
+            return;
         }
     }
 
@@ -184,7 +175,6 @@ async function switchToGame() {
 
     document.getElementById('question-box').innerText = data.pitanje;
     const roleEl = document.getElementById('role-display');
-    // Sve puta piši "TI SI NEVIN" - nitko ne zna tko je uljez!
     roleEl.innerText = "TI SI NEVIN. 😇";
     roleEl.style.color = "#10b981";
 }
@@ -201,9 +191,8 @@ async function sendAnswer() {
     });
 
     input.value = "";
-    input.disabled = true; // Onemogući ponovno slanje
+    input.disabled = true;
     
-    // Pokrećemo osvežavanje rezultata
     if (resultsPoll) clearInterval(resultsPoll);
     resultsPoll = setInterval(fetchResults, 3000);
     fetchResults();
@@ -214,7 +203,6 @@ async function fetchResults() {
         const res = await fetch(`${API}/results/${currentRoom}`);
         const data = await res.json();
         
-        // POPRAVKA: Odgovori su sada u data.answers, a ne u samom data
         const answersList = data.answers || [];
         
         const feed = document.getElementById('answers-feed');
@@ -226,12 +214,10 @@ async function fetchResults() {
             `).join('');
         }
 
-        // Provjera da li prelazimo na glasanje
         if (data.status === 'voting' && !hasVoted) {
             startVotingUI(gameRoomPlayers);
         }
 
-        // Provjera da li je igra gotova
         if (data.status === 'finished') {
             showWinner(data);
             if (resultsPoll) clearInterval(resultsPoll);
@@ -244,22 +230,23 @@ async function fetchResults() {
 // --- FUNKCIJE ZA GLASANJE ---
 
 function startVotingUI(players) {
-    // Sakrij polje za kucanje odgovora, prikaži glasanje
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('voting-area').style.display = 'block';
 
     const votingGrid = document.getElementById('voting-grid');
     
-    // Koristi proslijeđenu listu igrača (iz globalnog niza)
     const validPlayers = players && Array.isArray(players) ? players : [];
 
-    votingGrid.innerHTML = validPlayers
-        .filter(p => p !== currentUser) // Ne možeš glasati za sebe
-        .map(p => `
-            <button onclick="submitVote('${p}')" style="cursor:pointer; padding: 15px; margin: 5px; border: 2px solid var(--primary); background: rgba(56, 189, 248, 0.1); border-radius: 10px; color: white; font-weight: bold;">
-                🕵️ Sumnjam na: <b>${p}</b>
-            </button>
-        `).join('');
+    // ISPRAVKA: Ako je element pronađen, upiši sadržaj
+    if (votingGrid) {
+        votingGrid.innerHTML = validPlayers
+            .filter(p => p !== currentUser)
+            .map(p => `
+                <button onclick="submitVote('${p}')" style="cursor:pointer; padding: 15px; margin: 5px; border: 2px solid var(--primary); background: rgba(56, 189, 248, 0.1); border-radius: 10px; color: white; font-weight: bold;">
+                    🕵️ Sumnjam na: <b>${p}</b>
+                </button>
+            `).join('');
+    }
 }
 
 async function submitVote(votedFor) {
@@ -272,7 +259,12 @@ async function submitVote(votedFor) {
         body: JSON.stringify({ room: currentRoom, voter: currentUser, voted_for: votedFor })
     });
 
-    document.getElementById('voting-area').innerHTML = "<h3>Glasanje uspešno! Čekamo ostale... 🕒</h3>";
+    // *** ISPRAVKA: Ne brišemo ceo 'voting-area', već samo menjaš sadržaj grida ***
+    // Ako bi obrisao ceo area, obrisao bi i <div id="voting-grid"> i igra bi pukla u sledećoj rundi.
+    const votingGrid = document.getElementById('voting-grid');
+    if (votingGrid) {
+        votingGrid.innerHTML = "<h3>Glasanje uspešno! Čekamo ostale... 🕒</h3>";
+    }
 }
 
 async function checkWinner() {
@@ -280,7 +272,6 @@ async function checkWinner() {
         const res = await fetch(`${API}/results/${currentRoom}`);
         const data = await res.json();
         
-        // Pretpostavka: backend vraća 'status: finished' i informaciju o pobjedniku
         if (data.status === 'finished') {
             showWinner(data);
         }
@@ -294,15 +285,11 @@ function showWinner(data) {
     const title = document.getElementById('winner-title');
     const reveal = document.getElementById('reveal-box');
 
-    // Izdvoji imena uljeza (mogu biti odvojena zarezima)
     const impostorsList = (data.impostors || '').split(',').map(u => u.trim()).filter(u => u);
     const impostersText = impostorsList.length > 1 ? impostorsList.join(', ') : impostorsList[0];
     
-    // Provjeri da li je korisnik uljez
     const amIImpostor = impostorsList.includes(currentUser);
     
-    // Logika: Ako si uljez, pobjeđuješ kada je winner === 'impostor'
-    // Ako nisi uljez, pobjeđuješ kada je winner === 'detectives'
     const iWon = (amIImpostor && data.winner === 'impostor') || 
                  (!amIImpostor && data.winner === 'detectives');
 
@@ -318,42 +305,45 @@ function showWinner(data) {
 }
 
 async function playAgain() {
+    hasVoted = false; 
+    
+    if (resultsPoll) clearInterval(resultsPoll);
+    if (lobbyPoll) clearInterval(lobbyPoll);
+
     try {
-        // 1. Javi serveru da resetuje sobu
-        await fetch(`${API}/play_again`, {
+        const res = await fetch(`${API}/play_again`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ room_id: currentRoom, user: currentUser })
         });
-
-        // 2. Resetuj lokalne varijable za novu igru
-        hasVoted = false;
         
-        // Očisti polja za unos
+        if (!res.ok) throw new Error("Greška sa serverom");
+
         const ansInput = document.getElementById('ans-input');
         if(ansInput) {
             ansInput.value = "";
             ansInput.disabled = false;
         }
         
-        // Očisti listu odgovora
         document.getElementById('answers-feed').innerHTML = "";
         
-        // 3. Prebaci UI nazad u Lobby
         document.getElementById('winner-area').style.display = 'none';
         document.getElementById('voting-area').style.display = 'none';
+        
+        // *** ISPRAVKA: Uklonjena linija koja je brisala HTML strukturu ***
+        // document.getElementById('voting-area').innerHTML = ""; <--- OVO JE BILO PROBLEMATIČNO
+        
         document.getElementById('game-area').classList.remove('active');
+        
         document.getElementById('lobby-area').classList.add('active');
         
-        // Osiguraj da je sidebar vidljiv
         const sidebar = document.getElementById('sidebar');
         if (sidebar) sidebar.classList.add('active-flex');
 
-        // 4. Ponovo pokreni proveru lobby-ja (da vidiš ko je spreman)
         startLobbyPolling();
 
     } catch (e) {
         console.error("Greška pri restartu igre:", e);
-        alert("Došlo je do greške prilikom restarta. Pokušaj da osvežiš stranicu.");
+        alert("Došlo je do greške. Pokušaj da osvežiš stranicu (F5).");
     }
 }
