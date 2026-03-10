@@ -316,3 +316,44 @@ function showWinner(data) {
         reveal.innerHTML = `<h3>Gubitak!</h3><p>Uljez je bio: <b>${impostersText || 'Nepoznato'}</b></p>`;
     }
 }
+
+async function playAgain() {
+    try {
+        // 1. Javi serveru da resetuje sobu
+        await fetch(`${API}/play_again`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_id: currentRoom, user: currentUser })
+        });
+
+        // 2. Resetuj lokalne varijable za novu igru
+        hasVoted = false;
+        
+        // Očisti polja za unos
+        const ansInput = document.getElementById('ans-input');
+        if(ansInput) {
+            ansInput.value = "";
+            ansInput.disabled = false;
+        }
+        
+        // Očisti listu odgovora
+        document.getElementById('answers-feed').innerHTML = "";
+        
+        // 3. Prebaci UI nazad u Lobby
+        document.getElementById('winner-area').style.display = 'none';
+        document.getElementById('voting-area').style.display = 'none';
+        document.getElementById('game-area').classList.remove('active');
+        document.getElementById('lobby-area').classList.add('active');
+        
+        // Osiguraj da je sidebar vidljiv
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.add('active-flex');
+
+        // 4. Ponovo pokreni proveru lobby-ja (da vidiš ko je spreman)
+        startLobbyPolling();
+
+    } catch (e) {
+        console.error("Greška pri restartu igre:", e);
+        alert("Došlo je do greške prilikom restarta. Pokušaj da osvežiš stranicu.");
+    }
+}
