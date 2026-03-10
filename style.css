@@ -1,3 +1,8 @@
+/* OSNOVNA PODEŠAVANJA */
+* {
+    box-sizing: border-box; /* OVO JE KLJUČNO DA PADDING NE PROBIVA ŠIRINU */
+}
+
 :root {
     --bg: #0f172a;
     --card: #1e293b;
@@ -12,43 +17,47 @@ body {
     color: var(--text); 
     font-family: 'Poppins', sans-serif; 
     margin: 0; 
-    /* Uklonjeno min-height i flex centriranje da bi stranica mogla da se skroluje na mobilnom */
+    padding: 0;
+    min-height: 100vh;
+    width: 100%;
+    /* Dozvoli skrolovanje, ne centriraj vertikalno na telefonu */
     display: flex; 
     justify-content: center; 
-    align-items: flex-start; /* Poravnanje na vrhu */
-    min-height: 100vh;
+    align-items: flex-start; 
 }
 
+/* KONTENJER ZA SADRŽAJ */
 .game-wrapper {
     display: flex;
     gap: 20px;
-    width: 95%;
+    width: 100%;
     max-width: 1300px;
+    padding: 20px;
+    /* Podrazumevani redosled za Desktop */
     flex-wrap: wrap;
     justify-content: center;
-    padding: 20px;
-    padding-bottom: 40px; /* Prostor na dnu */
 }
 
+/* --- GLAVNA KARTICA (SREDINA) --- */
 .main-card {
     background: var(--card);
-    padding: 30px; /* Malo manji padding za mobilni */
+    padding: 30px;
     border-radius: 24px;
     flex: 2;
-    min-width: 320px;
+    min-width: 300px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     border: 1px solid rgba(255,255,255,0.05);
     text-align: center;
     order: 2; /* Sredina na desktopu */
 }
 
-/* --- CHAT SIDEBAR --- */
+/* --- CHAT (LEVO) --- */
 .chat-sidebar {
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 24px;
-    width: 300px;
+    width: 280px;
     display: none; 
     flex-direction: column;
     border: 1px solid rgba(255,255,255,0.1);
@@ -72,7 +81,7 @@ body {
     font-size: 0.85rem;
     padding: 5px 0;
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    word-wrap: break-word; /* Da dugačke poruke ne probiju ivicu */
+    word-wrap: break-word;
 }
 .chat-msg b { color: var(--primary); }
 
@@ -87,7 +96,7 @@ body {
 }
 .chat-input-area button {
     width: auto;
-    padding: 10px 20px;
+    padding: 0 20px;
     margin: 0;
     background: var(--primary);
     border: none;
@@ -97,7 +106,7 @@ body {
     color: var(--bg);
 }
 
-/* --- PLAYER SIDEBAR --- */
+/* --- PLAYER LISTA (DESNO) --- */
 .sidebar {
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(10px);
@@ -118,7 +127,7 @@ h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
     flex-wrap: wrap;
     gap: 10px;
     margin: 20px 0;
-    justify-content: center; /* Centrirano na mobilnom */
+    justify-content: flex-start;
 }
 
 .player-circle {
@@ -152,6 +161,7 @@ h1, h2 { margin-top: 0; color: var(--primary); font-weight: 700; }
     text-transform: uppercase;
 }
 
+/* FORME I DUGMAD */
 input, select {
     width: 100%;
     padding: 14px;
@@ -162,7 +172,7 @@ input, select {
     color: white;
     font-family: inherit;
     box-sizing: border-box;
-    font-size: 16px; /* Sprečava zoom na iOS-u kada se klikne */
+    font-size: 16px; /* SPREČAVA ZOOM NA IPHONE-U */
 }
 
 button {
@@ -173,21 +183,21 @@ button {
     border: none;
     font-weight: 700;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.2s;
     font-family: inherit;
     text-transform: uppercase;
+    font-size: 0.9rem;
 }
 
 .btn-blue { background: var(--primary); color: var(--bg); }
-.btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3); }
-.btn-blue:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-blue:hover { opacity: 0.9; }
+.btn-blue:disabled { background: #555; color: #888; cursor: not-allowed; }
 
 .btn-ready {
     background: #334155;
     color: white;
     border: 2px solid var(--secondary);
 }
-.btn-ready:hover { background: rgba(16, 185, 129, 0.2); }
 .btn-ready.is-ready {
     background: var(--secondary);
     color: var(--bg);
@@ -212,78 +222,68 @@ button {
     color: white !important;
 }
 
-.btn-delete:hover {
-    background: #b91c1c !important;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
-}
 
-/* =========================================
-   RESPONSIVE DIZAJN ZA TELEFONE (MAX 900px)
-   ========================================= */
-@media (max-width: 900px) {
+/* =====================================================
+   MOBILNI TELEFON (EKRANI MANJI OD 800px)
+   ===================================================== */
+@media (max-width: 800px) {
+    
     body {
-        align-items: flex-start; /* Počni od vrha */
+        align-items: flex-start; /* Počinje od vrha */
     }
 
     .game-wrapper {
-        flex-direction: column; /* Složi sve vertikalno */
+        flex-direction: column; /* SVE JEDNO ISPOD DRUGOG */
         width: 100%;
         padding: 10px;
         gap: 15px;
     }
 
-    /* Glavna kartica (Igra/Lobi) je najvažnija - IDE NA VRH */
+    /* 1. GLAVNA KARTICA (IDE NA VRH) */
     .main-card {
         order: 1; 
         width: 100%;
-        min-width: auto;
+        min-width: 0; /* OBEZBEĐUJE DA STANE NA EKRAN */
         padding: 20px;
         border-radius: 16px;
-        box-shadow: none;
-        margin-bottom: 10px;
     }
 
-    /* Igraci (Sidebar) ispod glavne kartice */
+    /* 2. LISTA IGRAČA (ISPOD GLAVNE) */
     .sidebar {
         order: 2;
         width: 100%;
-        min-height: auto;
+        min-width: 0;
         padding: 15px;
         border-radius: 16px;
-        flex-direction: column;
+        min-height: auto; /* Da se skupi */
     }
-    
-    /* Chat na dnu */
+
+    /* 3. CHAT (NA DNU) */
     .chat-sidebar {
         order: 3;
         width: 100%;
-        min-height: auto;
+        min-width: 0;
         padding: 15px;
         border-radius: 16px;
+        min-height: auto;
     }
 
-    /* Smanjujemo visinu chat boxa na mobilnom da ne zauzima previše */
+    /* POSEBNA VISINA ZA CHAT BOX NA TELEFONU */
     #chat-box {
-        height: 200px; /* Fiksna visina za scroll */
-        flex: none; 
+        height: 200px; /* Fiksna visina da ne zauzima previše */
+        flex: none;
     }
 
-    /* Input polja i dugmad bolje na mobilnom */
-    input, select {
-        padding: 12px;
-    }
-    
-    button {
-        padding: 12px;
-    }
-
+    /* SMANJIVANJE TEKSTA */
     h1 { font-size: 1.8rem; }
     h2 { font-size: 1.4rem; }
     
-    /* Dugmad za glasanje u koloni umesto u redu */
+    /* DUGMAD ZA GLASANJE U KOLONI */
+    #voting-grid {
+        flex-direction: column;
+    }
     #voting-grid button {
         width: 100%;
-        margin: 5px 0;
+        margin: 5px 0 !important;
     }
 }
