@@ -2,185 +2,82 @@
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
-    <title>ULJEZ IGRA - Lobi</title>
-    <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; box-sizing: border-box; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; box-sizing: border-box;}
-        button { background: #38bdf8; font-weight: bold; cursor: pointer; color: #0f172a; }
-        button.btn-join { background: #10b981; color: white; }
-        #lobby-area, #game-area, #error-area { display: none; }
-        #error-area { background: #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; }
-        .player-chip { background: #334155; padding: 5px 10px; border-radius: 20px; display: inline-block; margin: 5px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULJEZ - Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="error-area"></div>
+    <div class="game-wrapper">
+        <div class="main-card">
+            
+            <div id="setup-area" class="active">
+                <h1>🕵️ ULJEZ</h1>
+                <input type="text" id="nick" placeholder="Tvoj nadimak">
+                <input type="text" id="room" placeholder="Ime sobe">
+                
+                <div style="text-align: left; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                    <label style="font-size: 0.75rem; color: var(--primary)">Maksimalno igrača:</label>
+                    <select id="max_p">
+                        <option value="3">3 Igrača</option>
+                        <option value="4">4 Igrača</option>
+                        <option value="5" selected>5 Igrača</option>
+                        <option value="6">6 Igrača</option>
+                        <option value="7">7 Igrača</option>
+                        <option value="8">8 Igrača</option>
+                        <option value="9">9 Igrača</option>
+                        <option value="10">10 Igrača</option>
+                    </select>
 
-    <div id="setup-area" class="box">
-        <h1>🕵️ ULJEZ</h1>
-        <input type="text" id="nick" placeholder="Tvoj nadimak">
-        <input type="text" id="room" placeholder="Ime sobe (za kreiranje ili join)">
-        
-        <div style="background: #334155; padding: 10px; border-radius: 8px; margin-top: 15px;">
-            <p style="margin: 0 0 10px 0; font-size: 0.9em;">Samo ako KREIRAŠ sobu:</p>
-            <label>Maksimalno igrača:</label>
-            <select id="max_p"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select>
-            <label>Broj uljeza:</label>
-            <select id="num_i"><option value="1">1</option><option value="2">2</option></select>
+                    <label style="font-size: 0.75rem; color: var(--primary)">Broj uljeza:</label>
+                    <select id="num_i">
+                        <option value="1" selected>1 Uljez</option>
+                        <option value="2">2 Uljeza</option>
+                        <option value="3">3 Uljeza</option>
+                    </select>
+                </div>
+
+                <button class="btn-blue" onclick="createRoom()">KREIRAJ</button>
+                <button style="background: var(--secondary); color: white;" onclick="joinRoom()">PRIDRUŽI SE</button>
+            </div>
+
+            <div id="lobby-area">
+                <h2 id="room-title">Lobi</h2>
+                <p>Čekamo igrače da se pridruže...</p>
+                <button id="start-btn" class="btn-blue" style="display:none; background: #f59e0b;" onclick="startGame()">🚀 KRENI IGRU</button>
+            </div>
+
+            <div id="game-area">
+                <h2 id="role-display">Uloga</h2>
+                <div id="question-box" style="background:#334155; padding:20px; border-radius:15px; margin:20px 0;"></div>
+                <input type="text" id="ans-input" placeholder="Tvoj odgovor...">
+                <button class="btn-blue" onclick="sendAnswer()">POŠALJI</button>
+                <div id="answers-feed" style="margin-top:20px; text-align: left;"></div>
+            </div>
+            <div id="voting-area" style="display:none;">
+                <h2>KO JE ULJEZ? 🤨</h2>
+                <p>Pažljivo pročitaj odgovore i glasaj za sumnjivca:</p>
+                <div id="voting-grid" class="player-grid">
+                    </div>
+            </div>
+
+            <div id="winner-area" style="display:none;">
+                <h1 id="winner-title" style="font-size: 3rem;"></h1>
+                <div id="reveal-box" style="padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.1); margin-bottom: 20px;">
+                    </div>
+                <button class="btn-blue" onclick="location.reload()">IGRAJ OPET</button>
+            </div>
         </div>
 
-        <button onclick="createRoom()">➕ KREIRAJ SOBU</button>
-        <button onclick="joinRoom()" class="btn-join">➡️ PRIDRUŽI SE</button>
+        <aside id="sidebar" class="sidebar">
+            <h3 style="margin-top:0; font-size: 1rem;">LJUDI U SOBI</h3>
+            <div id="player-grid" class="player-grid">
+                </div>
+            <button class="btn-leave" onclick="leaveRoom()">🚪 NAPUSTI LOBI</button>
+        </aside>
     </div>
 
-    <div id="lobby-area" class="box">
-        <h2>Čekaonica: <span id="lobby-room-name"></span></h2>
-        <p>Igrača: <span id="player-count">0/0</span></p>
-        <div id="player-list" style="margin: 20px 0;"></div>
-        
-        <button id="start-btn" onclick="startGame()" style="display:none; background:#f59e0b; color:white;">🚀 ZAPOČNI IGRU</button>
-        <p id="waiting-msg" style="display:none; color: #94a3b8;">Čekamo kreatora da započne igru...</p>
-    </div>
-
-    <div id="game-area" class="box">
-        <h2 id="role"></h2>
-        <div id="pitanje" style="background:#334155; padding:15px; border-radius:10px;"></div>
-        <input type="text" id="ans" placeholder="Upiši svoj odgovor ovde...">
-        <button onclick="sendAnswer()">POŠALJI ODGOVOR</button>
-        <div id="res-list" style="margin-top: 15px; text-align: left;"></div>
-    </div>
-
-    <script>
-        const API = "https://ammcooo.pythonanywhere.com";
-        let u = "", r = "";
-        let pollInterval;
-
-        function showError(msg) {
-            const errDiv = document.getElementById('error-area');
-            errDiv.style.display = 'block';
-            errDiv.innerText = msg;
-        }
-
-        async function createRoom() {
-            document.getElementById('error-area').style.display = 'none';
-            u = document.getElementById('nick').value.trim();
-            r = document.getElementById('room').value.trim();
-            let max_p = document.getElementById('max_p').value;
-            let num_i = document.getElementById('num_i').value;
-            
-            if(!u || !r) return showError("Moraš uneti nadimak i ime sobe!");
-
-            const res = await fetch(`${API}/create_room`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ room_id: r, user: u, max_p: max_p, num_imp: num_i })
-            });
-            const data = await res.json();
-
-            if(data.error) showError(data.error);
-            else showLobby();
-        }
-
-        async function joinRoom() {
-            document.getElementById('error-area').style.display = 'none';
-            u = document.getElementById('nick').value.trim();
-            r = document.getElementById('room').value.trim();
-            if(!u || !r) return showError("Moraš uneti nadimak i ime sobe!");
-
-            const res = await fetch(`${API}/join_room`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ room_id: r, user: u })
-            });
-            const data = await res.json();
-
-            if(data.error) showError(data.error);
-            else showLobby();
-        }
-
-        function showLobby() {
-            document.getElementById('setup-area').style.display = 'none';
-            document.getElementById('lobby-area').style.display = 'block';
-            document.getElementById('lobby-room-name').innerText = r;
-            
-            // Proveravaj lobi svake 2 sekunde
-            pollInterval = setInterval(fetchLobbyStatus, 2000);
-            fetchLobbyStatus();
-        }
-
-        async function fetchLobbyStatus() {
-            const res = await fetch(`${API}/lobby/${r}`);
-            const data = await res.json();
-            
-            if(data.error) return showError(data.error);
-
-            // Ako je kreator počeo igru, prebaci ekran
-            if(data.status === 'playing') {
-                clearInterval(pollInterval);
-                ucitajPitanje();
-                return;
-            }
-
-            // Prikaz igrača i dugmeta
-            document.getElementById('player-count').innerText = `${data.players.length}/${data.max_p}`;
-            document.getElementById('player-list').innerHTML = data.players.map(p => `<span class="player-chip">${p}</span>`).join('');
-            
-            if(data.creator === u) {
-                document.getElementById('start-btn').style.display = 'block';
-                document.getElementById('waiting-msg').style.display = 'none';
-            } else {
-                document.getElementById('start-btn').style.display = 'none';
-                document.getElementById('waiting-msg').style.display = 'block';
-            }
-        }
-
-        async function startGame() {
-            const res = await fetch(`${API}/start_game`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ room_id: r, user: u })
-            });
-            const data = await res.json();
-            if(data.error) showError(data.error);
-        }
-
-        async function ucitajPitanje() {
-            const res = await fetch(`${API}/get_q`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ room_id: r, user: u })
-            });
-            const data = await res.json();
-            
-            document.getElementById('lobby-area').style.display = 'none';
-            document.getElementById('game-area').style.display = 'block';
-            document.getElementById('pitanje').innerText = data.pitanje;
-            document.getElementById('role').innerText = data.is_impostor ? "TI SI ULJEZ! 🤫" : "NEVIN SI. 😇";
-            document.getElementById('role').style.color = data.is_impostor ? "#ff4444" : "#10b981";
-        }
-
-        async function sendAnswer() {
-            const ansInput = document.getElementById('ans').value.trim();
-            if(!ansInput) return;
-
-            await fetch(`${API}/submit`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ room: r, user: u, text: ansInput })
-            });
-            
-            document.getElementById('ans').value = ""; // Očisti polje
-            setInterval(fetchResults, 3000); // Automatski osvežavaj odgovore
-            fetchResults();
-        }
-
-        async function fetchResults() {
-            const res = await fetch(`${API}/results/${r}`);
-            const data = await res.json();
-            document.getElementById('res-list').innerHTML = data.map(i => `<p><b>${i.u}:</b> ${i.t}</p>`).join('');
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
