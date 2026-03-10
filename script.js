@@ -5,6 +5,7 @@ let lobbyPoll;
 let resultsPoll;
 let hasVoted = false;
 let gameRoomPlayers = []; // Čuvamo listu igrača
+let isCreator = false; // <--- DODAJ OVO
 
 // --- POMOĆNE I UI FUNKCIJE ---
 
@@ -96,10 +97,9 @@ async function fetchLobbyStatus() {
             return;
         }
 
-        // Čuvamo listu igrača globalno
         gameRoomPlayers = data.players;
 
-        // --- NOVO: Renderovanje igrača u krugovima (Pill chips) ---
+        // --- Renderovanje igrača ---
         const grid = document.getElementById('player-grid');
         if (grid) {
             grid.innerHTML = data.players.map(p => `
@@ -109,22 +109,49 @@ async function fetchLobbyStatus() {
             `).join('');
         }
 
-        // Proveri da li je igra počela
         if (data.status === 'playing') {
             clearInterval(lobbyPoll);
             switchToGame();
         }
 
-        // Prikaži START dugme samo kreatoru
+        // --- NOVA LOGIKA ZA DUGME (START I DELETE) ---
+        const startBtn = document.getElementById('start-btn');
+        const leaveBtn = document.querySelector('.btn-leave'); // Selektujemo dugme za napuštanje
+
         if (data.creator === currentUser) {
-            const startBtn = document.getElementById('start-btn');
+            isCreator = true; // Postavljamo flag
+            
+            // Prikaži dugme za start
             if (startBtn) startBtn.style.display = 'block';
+            
+            // Promeni dugme za napuštanje u "Obriši sobu"
+            if (leaveBtn) {
+                leaveBtn.innerText = "🗑️ OBRIŠI SOBU";
+                leaveBtn.classList.add('btn-delete'); // Dodajemo crvenu klasu
+            }
+        } else {
+            isCreator = false;
+            
+            // Sakrij start dugme za obične igrače
+            if (startBtn) startBtn.style.display = 'none';
+            
+            // Vrati običan tekst za napuštanje
+            if (leaveBtn) {
+                leaveBtn.innerText = "🚪 NAPUSTI LOBI";
+                leaveBtn.classList.remove('btn-delete');
+            }
         }
     } catch (e) { console.error("Lobby poll error", e); }
 }
 
 async function leaveRoom() {
-    // Pozivamo backend da nas izbriše iz baze
+    // Ako je kreator, prikaži upozorenje da će soba biti obrisana
+    if (isCreator) {
+        if (!confirm("⚠️ Da li ste sigurni? Brisanje sobe će izbaciti sve igrače!")) {
+            return; // Ako pritisne "Cancel", ne radi ništa
+        }
+    }
+
     try {
         await fetch(`${API}/leave_room`, {
             method: 'POST',
@@ -133,7 +160,6 @@ async function leaveRoom() {
         });
     } catch (e) { console.log("Greška pri napuštanju"); }
     
-    // Vraćamo sajt na početak
     location.reload();
 }
 
