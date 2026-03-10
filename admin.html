@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Uljez</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Poppins', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #38bdf8; text-align: center; }
+        
+        /* Login stil */
+        #login-box { background: #1e293b; padding: 40px; border-radius: 15px; max-width: 400px; margin: 50px auto; text-align: center; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { padding: 10px 20px; border-radius: 8px; border: none; background: #38bdf8; color: #000; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+        
+        /* Dashboard stil */
+        #dashboard { display: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-logout { background: #ef4444; width: auto; padding: 10px 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: #10b981; }
+        
+        .status-waiting { color: #f59e0b; }
+        .status-playing { color: #38bdf8; }
+        .status-finished { color: #10b981; }
+        
+        .action-btn { padding: 5px 10px; font-size: 12px; width: auto; margin: 2px; }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-view { background: #334155; color: white; }
+        
+        /* Modal za igrace */
+        #playerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { background: #1e293b; margin: 10% auto; padding: 20px; width: 300px; border-radius: 15px; }
+        .modal-close { float: right; cursor: pointer; font-size: 20px; }
+        .player-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- LOGIN EKRAN -->
+    <div id="login-box">
+        <h2>🕵️ Admin Prijava</h2>
+        <input type="text" id="username" placeholder="Korisničko ime">
+        <input type="password" id="password" placeholder="Lozinka">
+        <button onclick="login()">PRIJAVI SE</button>
+        <p id="error-msg" style="color: #ef4444; font-size: 0.8rem;"></p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+        <div class="header">
+            <h1>Admin Panel</h1>
+            <button class="btn-logout" onclick="logout()">Odjavi se</button>
+        </div>
+
+        <table id="rooms-table">
+            <thead>
+                <tr>
+                    <th>Soba</th>
+                    <th>Kreator</th>
+                    <th>Igrača</th>
+                    <th>Status</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sobe se ubacuju ovdje -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal za pregled igraca -->
+<div id="playerModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h3>Igrači u sobi</h3>
+        <div id="players-list"></div>
+    </div>
+</div>
+
+<script>
+    const API = "https://ammcooo.pythonanywhere.com"; // Tvoj API URL
+
+    // Proveri da li je vec prijavljen
+    window.onload = () => {
+        checkSession();
+    };
+
+    async function checkSession() {
+        try {
+            const res = await fetch(`${API}/admin_check`, { credentials: 'include' });
+            const data = await res.json();
+            if (data.logged_in) {
+                showDashboard();
+            }
+        } catch (e) { console.log("Neulogovan"); }
+    }
+
+    async function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const err = document.getElementById('error-msg');
+
+        try {
+            const res = await fetch(`${API}/admin_login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                showDashboard();
+            } else {
+                err.innerText = "Pogrešni podaci!";
+            }
+        } catch (e) { err.innerText = "Greška mreže"; }
+    }
+
+    async function logout() {
+        await fetch(`${API}/admin_logout`, { method: 'POST', credentials: 'include' });
+        location.reload();
+    }
+
+    function showDashboard() {
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadRooms();
+        // Osvezavanje svakih 5 sekundi
+        setInterval(loadRooms, 5000);
+    }
+
+    async function loadRooms() {
+        const res = await fetch(`${API}/admin_get_rooms`, { credentials: 'include' });
+        const rooms = await res.json();
+        
+        const tbody = document.querySelector('#rooms-table tbody');
+        tbody.innerHTML = "";
+
+        rooms.forEach(r => {
+            const statusClass = `status-${r.status}`;
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${r.room}</b></td>
+                    <td>${r.creator}</td>
+                    <td>${r.players_count} / ${r.max_p}</td>
+                    <td><span class="${statusClass}">${r.status}</span></td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="viewPlayers('${r.room}')">👥 Igrači</button>
+                        <button class="action-btn btn-delete" onclick="deleteRoom('${r.room}')">🗑️ Obriši</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function deleteRoom(room) {
+        if(!confirm("Da li ste sigurni da želite da obrišete sobu " + room + "?")) return;
+        
+        await fetch(`${API}/admin_delete_room`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room: room }),
+            credentials: 'include'
+        });
+        loadRooms();
+    }
+
+    async function viewPlayers(room) {
+        const res = await fetch(`${API}/admin_get_players/${room}`, { credentials: 'include' });
+        const players = await res.json();
+        
+        const list = document.getElementById('players-list');
+        list.innerHTML = "";
+        
+        players.forEach(p => {
+            list.innerHTML += `
+                <div class="player-item">
+                    <span>${p.name} ${p.ready ? '(Spreman)' : ''}</span>
+                    <button class="action-btn btn-delete" onclick="kickPlayer('${room}', '${p.name}')">Izbaci</button>
+                </div>
+            `;
+        });
+        
+        document.getElementById('playerModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('playerModal').style.display = 'none';
+    }
+
+    async function kickPlayer(room, user) {
+        await fetch(`${API}/admin_kick_player`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room: room, user: user }),
+            credentials: 'include'
+        });
+        viewPlayers(room); // Osvezi listu
+        loadRooms(); // Osvezi tabelu (mozda je soba obrisana ako je kreator izbacen)
+    }
+</script>
+
+</body>
+</html>
