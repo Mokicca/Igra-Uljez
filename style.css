@@ -221,7 +221,125 @@ button {
     border-color: #b91c1c !important;
     color: white !important;
 }
+/* =========================================
+   MAIN MENU STILOVI
+   ========================================= */
 
+.menu-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.menu-container {
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+    padding: 20px;
+}
+
+.menu-title {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.menu-subtitle {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    margin-bottom: 40px;
+}
+
+.games-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+.game-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    width: 100%;
+    max-width: 400px;
+    text-decoration: none;
+    color: white;
+    border: 2px solid transparent;
+    transition: 0.3s;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    box-shadow: 0 15px 40px rgba(56, 189, 248, 0.2);
+}
+
+.game-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none; /* Ne može se kliknuti */
+}
+
+.card-icon {
+    /* background: rgba(255,255,255,0.05);  <-- OBRIŠI OVU LINIJU */
+    font-size: 3rem;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid rgba(255,255,255,0.1); /* Možeš i ovo da obrišeš ako ne želiš ni liniju */
+}
+
+.card-info {
+    padding: 20px;
+    flex: 1;
+}
+
+.card-info h2 {
+    margin: 0 0 5px 0;
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.card-info p {
+    margin: 0 0 10px 0;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.status.online {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--secondary);
+}
+
+.status.soon {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+}
+
+/* Responsive za meni */
+@media (max-width: 600px) {
+    .menu-title { font-size: 2rem; }
+    .game-card { flex-direction: column; text-align: center; }
+    .card-icon { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px; }
+}
 
 /* =====================================================
    MOBILNI TELEFON (EKRANI MANJI OD 800px)
@@ -285,5 +403,49 @@ button {
     #voting-grid button {
         width: 100%;
         margin: 5px 0 !important;
+    }
+
+    
+}
+
+/* --- STIL ZA DUGME NAZAD --- */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #334155; /* Tamno siva pozadina */
+    color: #fff;
+    text-decoration: none; /* Ukloni podvlaku */
+    border-radius: 12px;   /* Zaobljeno kao ostala dugmad */
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: 0.2s ease;
+    width: auto; /* Auto širina, ne celo */
+    margin: 0 auto 20px auto; /* Centrirano sa razmakom ispod */
+    cursor: pointer;
+}
+
+.btn-back:hover {
+    background: #475569; /* Malo svetlije na hover */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Ovo dodaj unutar postojećeg @media bloka ili na kraj fajla */
+@media (max-width: 800px) {
+    
+    /* Smanji dugme i zaobli ga više (izgleda kao krug/kapsula) */
+    .btn-back {
+        padding: 10px 15px; /* Manji padding */
+        border-radius: 50px; /* Veće zaobljenje */
+        font-size: 1.2rem; /* Malo veća strelica */
+    }
+
+    /* Sakrij tekst "Nazad" na telefonu */
+    .btn-text {
+        display: none;
     }
 }
