@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕵️ Uljez Igra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-wrapper">
+        
+        <!-- NOVI CHAT SIDEBAR (LEVO) -->
+        <div id="chat-sidebar" class="chat-sidebar">
+            <h3>💬 DISKUSIJA</h3>
+            <div id="chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Piši poruku..." onkeypress="handleChatEnter(event)">
+                <button onclick="sendChatMessage()">➤</button>
+            </div>
+        </div>
+
+        <div class="main-card">
+            
+            <!-- Dugme za povratak na meni -->
+            <div style="position: absolute; top: 20px; left: 20px;">
+                <a href="index.html" class="btn-back" style="text-decoration:none; color: var(--primary); font-weight:bold; font-size: 0.9rem;">
+                    ⬅️ Nazad
+                </a>
+            </div>
+
+            <div id="setup-area" class="active">
+                <h1>🕵️ ULJEZ</h1>
+                <input type="text" id="nick" placeholder="Tvoj nadimak">
+                <input type="text" id="room" placeholder="Ime sobe">
+                
+                <div style="text-align: left; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                    <label style="font-size: 0.75rem; color: var(--primary)">Maksimalno igrača:</label>
+                    <select id="max_p">
+                        <option value="3">3 Igrača</option>
+                        <option value="4">4 Igrača</option>
+                        <option value="5" selected>5 Igrača</option>
+                        <option value="6">6 Igrača</option>
+                        <option value="7">7 Igrača</option>
+                        <option value="8">8 Igrača</option>
+                        <option value="9">9 Igrača</option>
+                        <option value="10">10 Igrača</option>
+                    </select>
+
+                    <label style="font-size: 0.75rem; color: var(--primary)">Broj uljeza:</label>
+                    <select id="num_i">
+                        <option value="1" selected>1 Uljez</option>
+                        <option value="2">2 Uljeza</option>
+                        <option value="3">3 Uljeza</option>
+                    </select>
+                </div>
+
+                <button class="btn-blue" onclick="createRoom()">KREIRAJ SOBU</button>
+                <button style="background: var(--secondary); color: white;" onclick="joinRoom()">PRIDRUŽI SE</button>
+            </div>
+
+            <div id="lobby-area">
+                <h2 id="room-title">Lobi</h2>
+                <p>Čekamo igrače da se pridruže...</p>
+                <button id="start-btn" class="btn-blue" style="display:none; background: #f59e0b;" onclick="startGame()">🚀 KRENI IGRU</button>
+            </div>
+
+            <div id="game-area">
+                <h2 id="role-display">Uloga</h2>
+                <div id="question-box" style="background:#334155; padding:20px; border-radius:15px; margin:20px 0;"></div>
+                <input type="text" id="ans-input" placeholder="Tvoj odgovor...">
+                <button class="btn-blue" onclick="sendAnswer()">POŠALJI</button>
+                <div id="answers-feed" style="margin-top:20px; text-align: left;"></div>
+            </div>
+            <div id="voting-area" style="display:none;">
+                <h2>KO JE ULJEZ? 🤨</h2>
+                <p>Pažljivo pročitaj odgovore i glasaj za sumnjivca:</p>
+                <div id="voting-grid" class="player-grid">
+                    </div>
+            </div>
+
+            <div id="winner-area" style="display:none;">
+                <h1 id="winner-title" style="font-size: 3rem;"></h1>
+                <div id="reveal-box" style="padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.1); margin-bottom: 20px;">
+                    </div>
+                <button class="btn-blue" onclick="playAgain()">IGRAJ OPET</button>
+            </div>
+        </div>
+
+        <aside id="sidebar" class="sidebar">
+            <h3 style="margin-top:0; font-size: 1rem;">LJUDI U SOBI</h3>
+            <div id="player-grid" class="player-grid">
+                </div>
+            
+            <button id="ready-btn" class="btn-ready" onclick="toggleReady()">SPREMAN</button>
+            
+            <button class="btn-leave" onclick="leaveRoom()">🚪 NAPUSTI LOBI</button>
+        </aside>
+    </div>
+
+    <script src="uljez.js"></script>
+</body>
+</html>
